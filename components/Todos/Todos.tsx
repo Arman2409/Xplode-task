@@ -1,32 +1,43 @@
 import {Button, Box, Typography, TextField} from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import styles from "../../styles/Todos.module.scss";
-import { useRouter } from "next/router";
+
+interface ToDo {
+  name: string,
+  id: number
+}
 
 export default function Todos({todos}:any){
-    const router:any = useRouter();
-    const [todosArr, setTodosArr] = useState<any[]>([]);
+    const [todosArr, setTodosArr] = useState<ToDo[]>(todos);
     const [name, setName] = useState<string>("");
     const [info, setInfo] = useState<string>("");
+    const [infoColor, setInfoColor] = useState<string>("green");
+
+    // Refresh todos 
+    function refreshTodos() {
+      axios.get("/api/todos").then((res) => {
+        if(res.data.length || res.data.length == 0) {
+          setTodosArr(res.data);
+        } else {
+          setInfo("Error");
+          setInfoColor("red");
+        };
+      });
+    };
     
+    //  Add task 
     function addTask() {
-        axios.get("/api/addTask", {
-          method: "GET",
-          params: {
-            name
-          },   
-        }).then((res) => {
+       if(name.length == 0) {
+        setInfo("Todo's name required");
+        setInfoColor("red");
+        return;
+       }
+        axios.post("/api/todos", {name}).then((res) => {
            if(res.data.message) {
              setInfo(res.data.message)
              if (res.data.message == "Added") {
-                axios.get("/api/getTodos").then((res) => {
-                  if(res.data.length || res.data.length == 0) {
-                    setTodosArr(res.data);
-                  } else {
-                    setInfo("Error");
-                  }
-                });
+                refreshTodos();
              }
            } else {
             console.error(res.data);
@@ -36,40 +47,25 @@ export default function Todos({todos}:any){
         });
     };
 
+    // Delete task 
     function deleteTask(id:string) {
-        axios.get("/api/deleteTask", {
-            method: "GET",
-            params: {
-              id
-            },   
-          }).then((res) => {
-             if(res.data.message) {
-               if(res.data.message == "Deleted") {
-                axios.get("/api/getTodos").then((res) => {
-                    if(res.data.length || res.data.length == 0) {
-                      setInfo("Deleted")
-                      setTodosArr(res.data);
-                    } else {
-                      setInfo("Error");
-                    }
-                  });
-               }
+        axios.delete(`/api/todos/${id}`).then((res) => {
+             if(res.data.success) {
+                 setInfoColor("green")
+                 setInfo("Deleted");
+                 refreshTodos();
              } else {
-              console.error(res.data);
+               console.error(res.data.message);
              };
           }).catch((e) => {
               console.error(e);
           });
-    }
-
-    useEffect(() => {
-        setTodosArr(todos);
-    }, []);
+    };
 
     return (
         <Box className={styles.main}>
            <Box className={styles.todoCont}>
-                {todosArr.map((elem:any) => (
+                {todosArr.map((elem:ToDo) => (
                    <Box 
                      className={styles.todoItem}
                      key={elem.id}>
@@ -79,7 +75,11 @@ export default function Todos({todos}:any){
                       </Typography>
                       <Button
                        variant="contained"
-                       onClick={() => deleteTask(elem.id)}> Mark as done </Button>
+                       onClick={() => deleteTask(elem.id as any)}
+                       color="secondary"
+                       className={styles.todoButton}>
+                         Mark as done
+                      </Button>
                     </Box>
                 )) }
            </Box>
@@ -87,7 +87,6 @@ export default function Todos({todos}:any){
             className={styles.addCont}>
             <TextField 
               type={"text"}
-              name="name"
               value={name}
               className={styles.addInput}
               onChange={(e) => setName(e.target.value)}
@@ -97,10 +96,12 @@ export default function Todos({todos}:any){
              variant="contained">
                Add Task
             </Button>
-            <Typography className={styles.addInfo}>
+            <Typography 
+              className={styles.addInfo} 
+              color={infoColor}>
                 {info}
             </Typography>
            </Box>
         </Box>
-    )
-}
+    );
+};

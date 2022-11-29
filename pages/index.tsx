@@ -1,11 +1,10 @@
 import Head from 'next/head';
-import { useEffect } from 'react';
 import styles from '../styles/Home.module.scss';
 import Main from '../components/Todos/Todos';
 
 export const getStaticProps = async () => {
-  const fetchData:any = await fetch("http://localhost:3000/api/getTodos");
-  const data = await fetchData.json();
+  const fetchData:any = await fetch(process.env.SERVER_HOST + "/api/todos");
+  const data:any = await fetchData.json();
   const todos:any[] = [];
   if(data.length > 0){
     for( let x of data) {
