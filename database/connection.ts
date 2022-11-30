@@ -1,3 +1,4 @@
+// unused 
 import { Client } from "pg";
 
 const queryDB = async (query:string, array?:any[]) => {

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'path';
 
-import queryDB from '../../../database/connection'; 
+import Task from '../../../models/Task';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,12 +9,13 @@ export default async function handler(
 ) {
     if (req.method == "DELETE") {
         const url = parse(req.url as any);
-        const del:any = await queryDB( `DELETE FROM "todos" 
-        WHERE id = ($1)`, [url.name]);
-        if(del.rowCount || del.rowCount == 0) {
+        const del = await Task.destroy({
+            where: {id: url.name}
+        });
+        if(del) {
             res.json({ success: true});
         } else {
-            res.json({success: false, message: "Error"});
+            res.json({success: false, message: "Unknown Error Occured"});
         }
     } else {
         res.status(405).end();

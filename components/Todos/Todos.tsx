@@ -1,6 +1,10 @@
-import {Button, Box, Typography, TextField} from "@mui/material";
-import { useState } from "react";
-import axios from "axios";
+import {Button, Box, Typography, TextField, CircularProgress} from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch} from "react-redux";
+import { getTodosThunk, deleteTodoThunk, addTodoThunk } from "../../store/slices/todos";
+import { useUpdateEffect } from "usehooks-ts";
+import { useKeyPress } from "@react-typed-hooks/use-key-press";
+
 import styles from "../../styles/Todos.module.scss";
 
 interface ToDo {
@@ -8,63 +12,84 @@ interface ToDo {
   id: number
 }
 
-export default function Todos({todos}:any){
-    const [todosArr, setTodosArr] = useState<ToDo[]>(todos);
+export default function Todos({initialTodos}:any){
+   // States 
+    const [todosArr, setTodosArr] = useState<ToDo[]>(initialTodos);
     const [name, setName] = useState<string>("");
     const [info, setInfo] = useState<string>("");
     const [infoColor, setInfoColor] = useState<string>("green");
+    const [zindex, setZindex] = useState(-1);
 
-    // Refresh todos 
-    function refreshTodos() {
-      axios.get("/api/todos").then((res) => {
-        if(res.data.length || res.data.length == 0) {
-          setTodosArr(res.data);
-        } else {
-          setInfo("Error");
-          setInfoColor("red");
-        };
-      });
-    };
-    
-    //  Add task 
+    // Constant hooks
+    const dispatch = useDispatch();
+
+    // Selectors
+    const todos:any = useSelector(function(state:any){
+      return state.todos.todos;
+    });
+    const addStatus:any = useSelector(function(state:any){
+      return state.todos.addStatus;
+    });
+    const deleteStatus:any = useSelector(function(state:any){
+      return state.todos.deleteStatus;
+    });
+    const newChange:any = useSelector(function(state:any){
+      return state.todos.changedTodos;
+    });
+
+    //  Adding task 
     function addTask() {
        if(name.length == 0) {
         setInfo("Todo's name required");
         setInfoColor("red");
         return;
-       }
-        axios.post("/api/todos", {name}).then((res) => {
-           if(res.data.message) {
-             setInfo(res.data.message)
-             if (res.data.message == "Added") {
-                refreshTodos();
-             }
-           } else {
-            console.error(res.data);
-           };
-        }).catch((e) => {
-            console.error(e);
-        });
+       };
+       dispatch(addTodoThunk(name) as any);
     };
 
-    // Delete task 
+    // Deleting task 
     function deleteTask(id:string) {
-        axios.delete(`/api/todos/${id}`).then((res) => {
-             if(res.data.success) {
-                 setInfoColor("green")
-                 setInfo("Deleted");
-                 refreshTodos();
-             } else {
-               console.error(res.data.message);
-             };
-          }).catch((e) => {
-              console.error(e);
-          });
+        dispatch(deleteTodoThunk(id) as any);
     };
+
+    useEffect(() => {
+       if(addStatus) {
+          setInfo("Added");
+          setInfoColor("green")
+       };
+    }, [addStatus]);
+
+    useEffect(() => {
+        if(deleteStatus) {
+           setInfo("Deleted");
+           setInfoColor("green")
+        };
+    }, [deleteStatus]);
+
+    // Getting todos 
+    useUpdateEffect(() => {    
+      if(newChange){
+        dispatch(getTodosThunk("") as any);
+        setZindex(2);
+      };
+    }, [newChange]);
+
+    // Updating todos 
+    useUpdateEffect(() => {
+      setTodosArr([...todos]);
+      setZindex(-1)
+    }, [todos]);
 
     return (
         <Box className={styles.main}>
+           <Box className={styles.loadingCont} 
+                   sx={{
+                    zIndex: zindex
+                   }}>
+                <CircularProgress />
+            </Box>
            <Box className={styles.todoCont}>
+                {/* Mapping todos  */}
                 {todosArr.map((elem:ToDo) => (
                    <Box 
                      className={styles.todoItem}
@@ -85,6 +110,7 @@ export default function Todos({todos}:any){
            </Box>
            <Box 
             className={styles.addCont}>
+            {/* Add task container  */}
             <TextField 
               type={"text"}
               value={name}

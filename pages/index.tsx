@@ -28,7 +28,7 @@ export default  function Home({todos}:any) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Main todos={todos}/>
+      <Main initialTodos={todos}/>
     </div>
   )
 };

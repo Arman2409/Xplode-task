@@ -1,23 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import queryDB from '../../../database/connection';
+import Task from '../../../models/Task';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method == "GET") {
-     const get:any = await queryDB( `SELECT * FROM todos`);
-     res.json(get.rows);
-     return;
+    const tasks = await Task.findAll();
+    res.json(tasks);
+    return;
   };
 
   if (req.method == "POST") {
+    
     if (!req.body.name) {
         res.status(406).json({message: "The name of task is required"});
+    };
+    const newTask:any = await Task.create({name: req.body.name});
+
+    if(newTask.dataValues.id) {
+      res.status(201).json({success: true});
+    } else {
+      res.status(400).json({success: false, message: "Unknown Error Occured"})
     }
-    const put:any = await queryDB(`INSERT INTO "todos" ("name") VALUES($1)`, [req.body.name]);
-    if (put.rowCount) res.json({message: "Added"});
-    else res.json({message: "Error Occured"});
   } else {
     res.status(406).end();
   }
