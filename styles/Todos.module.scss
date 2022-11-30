@@ -37,13 +37,33 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      .editCont{
+        width: 300px;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        .editInput{
+          height: 30px;
+          width: 150px;
+          margin-right: 5px;
+          background-color: lightcoral;
+        }
+        .editButton{
+          height: 30px;
+          width: 100px;
+          margin-left: auto;
+          justify-self: flex-end;
+        }
+      }
       .todoTitle{
         font-size: 25px;
         color: firebrick;
       }
       .todoButton{
         height: 40px;
-        margin: 10px 0;
+        margin-left: 50px;
+        width: 150px;
+        font-size: 14px;
       }
     }
   }

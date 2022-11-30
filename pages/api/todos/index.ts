@@ -23,7 +23,23 @@ export default async function handler(
     } else {
       res.status(400).json({success: false, message: "Unknown Error Occured"})
     }
-  } else {
-    res.status(406).end();
-  }
+  } 
+  if( req.method == "PUT") {
+       if (!req.body.name || !req.body.id) {
+        res.status(406).json({message: "The name of task is required"});
+       };
+      const update = await Task.update(
+        {name: req.body.name},
+        {
+          where: {id: req.body.id}
+        }
+      );
+      if(update) {
+          res.json({success: true});
+      } else {
+          res.json({success: false, message: "Unknow Error Occured"})
+      } }
+    else {
+      res.status(406).end();
+    }
 };

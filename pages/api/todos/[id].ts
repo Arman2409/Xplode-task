@@ -7,8 +7,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+    const url = parse(req.url as any);
     if (req.method == "DELETE") {
-        const url = parse(req.url as any);
         const del = await Task.destroy({
             where: {id: url.name}
         });
@@ -17,7 +17,7 @@ export default async function handler(
         } else {
             res.json({success: false, message: "Unknown Error Occured"});
         }
-    } else {
+    }  else {
         res.status(405).end();
     };
 };

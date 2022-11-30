@@ -36,18 +36,34 @@ export const addTodoThunk:AsyncThunk<any, any, any> = createAsyncThunk(
     }
  );
 
+ export const updateTodoThunk:AsyncThunk<any, any, any> = createAsyncThunk(
+   "todos/updateTodo",
+   async (options:any):Promise<any> => {
+      const update = await  axios.put(`/api/todos`, {
+         id: options.id,
+         name: options.name,
+      });
+      if(update.data.success) return true;
+      else return false;
+   }
+);
+
  type InitialState = {
    todos: any[];
    deleteStatus: any,
    addStatus: any,
    gotTodos: Boolean,
+   updateStatus: any,
+   changedTodos: Boolean,
  };
 
  const initialState: InitialState = {
    todos: [],
    gotTodos: false,
    deleteStatus: null,
-   addStatus: null
+   addStatus: null,
+   updateStatus: null,
+   changedTodos: false
  };
 
 export const todosSlice = createSlice({
@@ -76,6 +92,14 @@ export const todosSlice = createSlice({
         state.deleteStatus = action.payload;
         state.changedTodos = true;
      },
+     [updateTodoThunk.pending as any]:(state:any , action:any):any => {
+      state.changedTodos = false;
+      state.updateStatus = false;
+    },
+    [updateTodoThunk.fulfilled as any]:(state:any , action:any):any => {
+       state.updateStatus = action.payload;
+       state.changedTodos = true;
+    },
     },
 });
 
